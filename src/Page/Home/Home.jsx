@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { IoCashOutline, IoPersonAddSharp, IoQrCode } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import UserProfiles from "../UserProfiles/UserProfiles.jsx";
@@ -7,8 +7,51 @@ import { MdLibraryBooks, MdOutlineCloudUpload } from "react-icons/md";
 import { GiCash, GiPayMoney } from "react-icons/gi";
 import { FaPhone, FaPhoneVolume } from "react-icons/fa";
 import { TiMessages } from "react-icons/ti";
+import { useSelector } from 'react-redux';
 
 const Home = () => {
+  // Get data from Redux store
+  const clientData = useSelector(state => {
+    console.log('Redux State:', state);
+    return state.customerSupplier
+  });
+  const { customers, suppliers } = clientData;
+  const [filter, setFilter] = useState('all');
+
+  console.log('Customers:', customers);
+  console.log('Suppliers:', suppliers);
+
+  // Combine and format all clients data
+  const allClients = useMemo(() => {
+    const clientList = [];
+    
+    // Process customers
+    if (filter === 'all' || filter === 'customer') {
+      Object.values(customers).forEach(container => {
+        // Get all items from this container
+        container.items.forEach(customer => {
+          clientList.push({
+            ...customer,  // This includes name, mobile, containerName, id, etc.
+            type: 'customer'
+          });
+        });
+      });
+    }
+
+    // Process suppliers
+    if (filter === 'all' || filter === 'supplier') {
+      Object.values(suppliers).forEach(container => {
+        container.items.forEach(supplier => {
+          clientList.push({
+            ...supplier,  // This includes name, mobile, containerName, id, etc.
+            type: 'supplier'
+          });
+        });
+      });
+    }
+
+    return clientList;
+  }, [customers, suppliers, filter]);
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-300 via-blue-300 to-purple-300 pb-20">
       {/* User Profile Header */}
@@ -109,18 +152,50 @@ const Home = () => {
       {/* Customer / সাপ্লায়ার  Count */}
 
       <div className="mt-4 px-4 flex justify-center w-full items-center ">
-        <div className=" w-full flex justify-center items-center p-2 rounded-lg shadow">
-          <div className=" w-full flex justify-center items-center text-center">
-            <p className="text-sm text-gray-600 flex justify-center gap-10 items-center w-full">
-              <Link to={"/add-customer"}>
-                {" "}
-                Add কাস্টমার <span> 0 </span>{" "}
-              </Link>
-              <Link to={"/add-customer"}>
-                {" "}
-                Add সাপ্লায়ার <span> 0 </span>{" "}
-              </Link>{" "}
-            </p>
+        <div className="w-full flex justify-center items-center p-2 rounded-lg shadow">
+          <div className="w-full flex justify-center items-center text-center">
+            <div className="text-sm text-gray-600 flex justify-center gap-4 items-center w-full">
+              <button
+                onClick={() => setFilter('customer')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  filter === 'customer' 
+                    ? 'bg-red-600 text-white' 
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                কাস্টমার{" "}
+                <span className="ml-1 px-2 py-1 bg-white bg-opacity-20 rounded">
+                  {Object.values(customers).reduce(
+                    (total, container) => total + container.items.length,
+                    0
+                  )}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilter('supplier')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  filter === 'supplier' 
+                    ? 'bg-red-600 text-white' 
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                সাপ্লায়ার{" "}
+                <span className="ml-1 px-2 py-1 bg-white bg-opacity-20 rounded">
+                  {Object.values(suppliers).reduce(
+                    (total, container) => total + container.items.length,
+                    0
+                  )}
+                </span>
+              </button>
+              {filter !== 'all' && (
+                <button
+                  onClick={() => setFilter('all')}
+                  className="px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  সব দেখুন
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -129,681 +204,39 @@ const Home = () => {
 
       {/* Space for Additional Data */}
       <div className="mt-1 px-4 relative">
-        <div className=" shadow rounded-lg  h-[290px]">
+        <div className="shadow rounded-lg h-[290px]">
           {/* This section will be used for displaying additional data */}
+          <div className="p-4 h-full overflow-y-auto flex flex-col gap-4">
+            {allClients.map((client, index) => (
+              <div key={index} className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full p-2">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+                  <img
+                    className="w-full h-full object-cover"
+                    src={client.image || (client.type === 'customer' ? '/photos/boy.png' : '/photos/woman.png')}
+                    alt={client.name}
+                  />
+                </div>
 
-          <div className="p-4 h-full overflow-y-auto flex flex-col gap-10">
-            {/* Additional data will be rendered here */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
+                <div className="flex-1">{client.name}</div>
+                
+                <div className="text-sm opacity-75">
+                  {client.containerName}
+                </div>
               </div>
+            ))}
 
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
+            {allClients.length === 0 && (
+              <div className="text-center text-gray-500 mt-4">
+                No customers or suppliers added yet
               </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/boy.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
-
-            {/* row */}
-            <div className="row flex gap-5 items-center bg-[#ffffff4d] rounded-full ">
-              {/* image */}
-              <div className="w-10 h-10  rounded-full flex items-center justify-center">
-                <img
-                  className="w-full h-full"
-                  src="photos/woman.png"
-                  alt="profile"
-                />
-              </div>
-
-              {/* image */}
-
-              <div className="">Abdul Kader</div>
-
-              <div className="amount flex gap-5">
-                <span className="text-red-300">00.00TK</span>
-                <span className="text-green-300">00.00TK</span>
-              </div>
-            </div>
-            {/* row */}
+            )}
           </div>
 
           {/* Add New Customer/Supplier Button */}
-          <div className=" absolute bottom-5 right-0 ">
-            {" "}
+          <div className="absolute bottom-5 right-0">
             <Button />
-            {" "}
           </div>
           {/* Add New Customer/Supplier Button */}
-
         </div>
       </div>
       {/* Space for Additional Data */}

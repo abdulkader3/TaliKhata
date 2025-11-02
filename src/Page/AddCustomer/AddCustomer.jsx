@@ -1,33 +1,46 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { addCustomer, addSupplier } from '../../Slice/ClintData'
 
 const AddCustomer = () => {
+  const dispatch = useDispatch()
   const [formData, setFormData] = useState({
     name: '',
-    mobile: ''
+    mobile: '',
+    containerName: '' // Added container name field
   })
   const [userType, setUserType] = useState('customer')
 
   const handleSubmit = (e) => {
     e.preventDefault()
     
-    // Get existing items from localStorage based on user type
-    const storageKey = userType.toLowerCase() + 's'
-    const existingItems = JSON.parse(localStorage.getItem(storageKey) || '[]')
-    
-    // Add new item with timestamp
-    const newItem = {
-      ...formData,
-      type: userType,
-      id: Date.now(),
-      createdAt: new Date().toISOString()
+    if (!formData.containerName) {
+      alert('Please enter a container name')
+      return
+    }
+
+    const data = {
+      name: formData.name,
+      mobile: formData.mobile,
+      type: userType
     }
     
-    // Save updated array back to localStorage
-    localStorage.setItem(storageKey, JSON.stringify([...existingItems, newItem]))
+    // Dispatch to Redux store based on user type with container name
+    if (userType === 'customer') {
+      dispatch(addCustomer({
+        containerName: formData.containerName,
+        data
+      }))
+    } else {
+      dispatch(addSupplier({
+        containerName: formData.containerName,
+        data
+      }))
+    }
     
     // Reset form
-    setFormData({ name: '', mobile: '' })
+    setFormData({ name: '', mobile: '', containerName: '' })
   }
 
   const handleChange = (e) => {
@@ -110,6 +123,19 @@ const AddCustomer = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1">কনটেইনার নাম</label>
+            <input
+              type="text"
+              name="containerName"
+              value={formData.containerName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+              placeholder="Enter container name"
+            />
+          </div>
+
           <div>
             <label className="block mb-1">নাম</label>
             <input

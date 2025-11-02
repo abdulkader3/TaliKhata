@@ -1,29 +1,110 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-export const user = createSlice({
-  name: 'user',
+export const clientSlice = createSlice({
+  name: 'clientData',
   initialState: {
-    value: 0,
+    customers: {},  // Will store as { [containerName]: { items: [...], nextIndex: 1 } }
+    suppliers: {}   // Will store as { [containerName]: { items: [...], nextIndex: 1 } }
   },
   reducers: {
-    increment: (state) => {
-      // Redux Toolkit allows us to write "mutating" logic in reducers. It
-      // doesn't actually mutate the state because it uses the Immer library,
-      // which detects changes to a "draft state" and produces a brand new
-      // immutable state based off those changes.
-      // Also, no return statement is required from these functions.
-      state.value += 1
+    addCustomer: (state, action) => {
+      const { containerName, data } = action.payload
+      // Initialize container if it doesn't exist
+      if (!state.customers[containerName]) {
+        state.customers[containerName] = {
+          items: [],
+          nextIndex: 1
+        }
+      }
+
+      // Add new item with container-specific index
+      const container = state.customers[containerName]
+      const newItem = {
+        ...data,
+        id: container.nextIndex,
+        containerName,
+        createdAt: new Date().toISOString()
+      }
+      
+      container.items.push(newItem)
+      container.nextIndex += 1
     },
-    decrement: (state) => {
-      state.value -= 1
+    addSupplier: (state, action) => {
+      const { containerName, data } = action.payload
+      // Initialize container if it doesn't exist
+      if (!state.suppliers[containerName]) {
+        state.suppliers[containerName] = {
+          items: [],
+          nextIndex: 1
+        }
+      }
+
+      // Add new item with container-specific index
+      const container = state.suppliers[containerName]
+      const newItem = {
+        ...data,
+        id: container.nextIndex,
+        containerName,
+        createdAt: new Date().toISOString()
+      }
+      
+      container.items.push(newItem)
+      container.nextIndex += 1
     },
-    incrementByAmount: (state, action) => {
-      state.value += action.payload
+    updateCustomer: (state, action) => {
+      const { containerName, id, data } = action.payload
+      const container = state.customers[containerName]
+      if (container) {
+        const index = container.items.findIndex(item => item.id === id)
+        if (index !== -1) {
+          container.items[index] = {
+            ...container.items[index],
+            ...data,
+            updatedAt: new Date().toISOString()
+          }
+        }
+      }
     },
-  },
+    updateSupplier: (state, action) => {
+      const { containerName, id, data } = action.payload
+      const container = state.suppliers[containerName]
+      if (container) {
+        const index = container.items.findIndex(item => item.id === id)
+        if (index !== -1) {
+          container.items[index] = {
+            ...container.items[index],
+            ...data,
+            updatedAt: new Date().toISOString()
+          }
+        }
+      }
+    },
+    removeCustomer: (state, action) => {
+      const { containerName, id } = action.payload
+      const container = state.customers[containerName]
+      if (container) {
+        container.items = container.items.filter(item => item.id !== id)
+      }
+    },
+    removeSupplier: (state, action) => {
+      const { containerName, id } = action.payload
+      const container = state.suppliers[containerName]
+      if (container) {
+        container.items = container.items.filter(item => item.id !== id)
+      }
+    }
+  }
 })
 
-// Action creators are generated for each case reducer function
-export const { increment, decrement, incrementByAmount } = user.actions
+// Export actions
+export const { 
+  addCustomer, 
+  addSupplier, 
+  updateCustomer, 
+  updateSupplier,
+  removeCustomer,
+  removeSupplier
+} = clientSlice.actions
 
-export default user.reducer
+// Export reducer
+export default clientSlice.reducer

@@ -5,11 +5,28 @@ import { addCustomer, addSupplier } from '../../Slice/ClintData'
 
 const AddCustomer = () => {
   const dispatch = useDispatch()
+  
+  // Helper function to get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const now = new Date()
+    return now.toISOString().split('T')[0]
+  }
+
+  // Helper function to get current time in HH:MM format
+  const getCurrentTime = () => {
+    const now = new Date()
+    return now.toTimeString().slice(0, 5)
+  }
+
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
     containerName: '',
-    image: null
+    image: null,
+    borrowedAmount: '',
+    returnDate: getCurrentDate(),
+    returnTime: getCurrentTime(),
+    note: ''
   })
   const [userType, setUserType] = useState('customer')
   const [suggestions, setSuggestions] = useState([])
@@ -51,7 +68,11 @@ const AddCustomer = () => {
       name: formData.name,
       mobile: formData.mobile,
       type: userType,
-      image: formData.image
+      image: formData.image,
+      borrowedAmount: formData.borrowedAmount || 0,
+      returnDate: formData.returnDate || null,
+      returnTime: formData.returnTime || null,
+      note: formData.note || ''
     }
     
     // Dispatch to Redux store based on user type with container name
@@ -68,7 +89,16 @@ const AddCustomer = () => {
     }
     
     // Reset form
-    setFormData({ name: '', mobile: '', containerName: '', image: null })
+    setFormData({
+      name: '',
+      mobile: '',
+      containerName: '',
+      image: null,
+      borrowedAmount: '',
+      returnDate: getCurrentDate(),
+      returnTime: getCurrentTime(),
+      note: ''
+    })
   }
 
   const handleChange = (e) => {
@@ -87,20 +117,20 @@ const AddCustomer = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-2 pb-16 min-w-[320px]">
       {/* Header */}
-      <div className="flex items-center mb-6">
-        <Link to="/" className="mr-4">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+      <div className="flex items-center mb-3">
+        <Link to="/" className="mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold">নতুন কাস্টমার/সাপ্লায়ার</h1>
+        <h1 className="text-lg font-bold">নতুন কাস্টমার/সাপ্লায়ার</h1>
       </div>
 
       {/* User Type Selection */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex gap-4">
+      <div className="flex gap-2 mb-4">
+        <div className="flex gap-2">
           <div className="relative">
             <input
               type="radio"
@@ -113,7 +143,7 @@ const AddCustomer = () => {
             />
             <label
               htmlFor="customer"
-              className={`px-6 py-2 rounded-lg cursor-pointer transition-all duration-200
+              className={`px-3 py-1.5 rounded-lg cursor-pointer transition-all duration-200 text-sm
                 ${userType === 'customer' 
                   ? 'bg-red-600 text-white' 
                   : 'bg-white text-gray-700 border hover:bg-gray-50'}`}
@@ -133,7 +163,7 @@ const AddCustomer = () => {
             />
             <label
               htmlFor="supplier"
-              className={`px-6 py-2 rounded-lg cursor-pointer transition-all duration-200
+              className={`px-3 py-1.5 rounded-lg cursor-pointer transition-all duration-200 text-sm
                 ${userType === 'supplier' 
                   ? 'bg-red-600 text-white' 
                   : 'bg-white text-gray-700 border hover:bg-gray-50'}`}
@@ -166,7 +196,7 @@ const AddCustomer = () => {
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`flex items-center gap-2 px-4 py-2 ${formData.image ? 'bg-green-50' : 'bg-gray-100'} rounded-lg relative`}
+            className={`flex items-center gap-1 px-2 py-1.5 ${formData.image ? 'bg-green-50' : 'bg-gray-100'} rounded-lg relative`}
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -174,7 +204,7 @@ const AddCustomer = () => {
               viewBox="0 0 24 24" 
               strokeWidth={1.5} 
               stroke={formData.image ? 'rgb(22 163 74)' : 'currentColor'} 
-              className="w-6 h-6"
+              className="w-5 h-5"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
@@ -192,14 +222,14 @@ const AddCustomer = () => {
         </div>
       </div>
 
-      <div className="bg-gray-100 p-6 rounded-lg">
-        <div className="text-center mb-6">
-          <h2 className="text-lg font-medium">ফেসবুক থেকে যোগ করি</h2>
+      <div className="bg-gray-100 p-3 rounded-lg">
+        <div className="text-center mb-3">
+          {/* <h2 className="text-base font-medium">ফেসবুক থেকে যোগ করি</h2> */}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative">
-            <label className="block mb-1">কনটেইনার নাম</label>
+            <label className="block mb-1"> Business name </label>
             <input
               type="text"
               name="containerName"
@@ -210,14 +240,14 @@ const AddCustomer = () => {
                 // Delay hiding suggestions to allow click events
                 setTimeout(() => setShowSuggestions(false), 200)
               }}
-              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               required
               placeholder="Enter container name"
               autoComplete="off"
             />
             {/* Suggestions dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-auto">
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={index}
@@ -241,7 +271,7 @@ const AddCustomer = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               required
             />
           </div>
@@ -253,14 +283,59 @@ const AddCustomer = () => {
               name="mobile"
               value={formData.mobile}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1">Borrowed Amount (টাকা)</label>
+            <input
+              type="number"
+              name="borrowedAmount"
+              value={formData.borrowedAmount}
+              onChange={handleChange}
+              className="w-full px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder="Enter amount"
+              min="0"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1">Promise Return Date & Time</label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                name="returnDate"
+                value={formData.returnDate}
+                onChange={handleChange}
+                className="flex-1 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <input
+                type="time"
+                name="returnTime"
+                value={formData.returnTime}
+                onChange={handleChange}
+                className="w-32 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1">Note (Optional)</label>
+            <textarea
+              name="note"
+              value={formData.note}
+              onChange={handleChange}
+              className="w-full px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder="Add any additional notes"
+              rows="2"
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition duration-200"
+            className="w-full bg-red-600 text-white py-2 text-sm rounded-lg hover:bg-red-700 transition duration-200"
           >
             নিশ্চিত
           </button>

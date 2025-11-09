@@ -217,7 +217,7 @@ const Home = () => {
       {/* Space for Additional Data */}
 
       {/* Add New Customer/Supplier Button */}
-      <div className="absolute bottom-18 right-0">
+      <div className="absolute bottom-40 right-2 md:right-6 ">
         <Button />
       </div>
       {/* Add New Customer/Supplier Button */}

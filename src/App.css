@@ -1,0 +1,108 @@
+/* Mobile-first base styles */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  body {
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+    overflow-y: hidden;
+  }
+
+  #root {
+    position: relative;
+    width: 390px; /* iPhone 12/13/14 width */
+    min-height: calc(100vh - 40px);
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 40px;
+    padding: 20px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  /* Ensure the navbar stays within the mobile container */
+  nav.fixed {
+    position: fixed;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 350px !important; /* Slightly smaller than container width */
+    margin: 0 auto;
+  }
+
+  /* Custom scrollbar for the container */
+  #root::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #root::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #root::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 3px;
+  }
+
+  /* Mobile frame effect */
+  #root::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 25px;
+    background: #111;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-top-left-radius: 40px;
+    border-top-right-radius: 40px;
+  }
+
+  /* Side messages */
+  #root::after {
+    content: '📱 This application is optimized for mobile devices. For the best experience, please use your smartphone.';
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* Right side message */
+  body::after {
+    content: '💡 You can still use all features on desktop, but the layout is intentionally kept mobile-friendly.';
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    line-height: 1.5;
+  }
+}
+
+/* Hide side messages on smaller screens */
+@media (max-width: 1200px) {
+  #root::after,
+  body::after {
+    display: none;
+  }
+}

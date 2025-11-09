@@ -6,17 +6,39 @@ import { addCustomer, addSupplier } from '../../Slice/ClintData'
 const AddCustomer = () => {
   const dispatch = useDispatch()
   
-  // Helper function to get current date in YYYY-MM-DD format
-  const getCurrentDate = () => {
-    const now = new Date()
-    return now.toISOString().split('T')[0]
-  }
+  // Convert YYYY-MM-DD to DD-MM-YYYY for display
+  const toDisplayFormat = (dateStr) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year}`;
+  };
 
-  // Helper function to get current time in HH:MM format
+  // Convert DD-MM-YYYY to YYYY-MM-DD for storage
+  const toStorageFormat = (dateStr) => {
+    if (!dateStr) return '';
+    const [day, month, year] = dateStr.split('-');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Get current date in DD-MM-YYYY format
+  const getCurrentDate = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  // Get current time in HH:MM format
   const getCurrentTime = () => {
-    const now = new Date()
-    return now.toTimeString().slice(0, 5)
-  }
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  // Initialize state with current date in display format
+  const [displayDate, setDisplayDate] = useState(getCurrentDate());
 
   const [formData, setFormData] = useState({
     name: '',
@@ -24,7 +46,7 @@ const AddCustomer = () => {
     containerName: '',
     image: null,
     borrowedAmount: '',
-    returnDate: getCurrentDate(),
+    returnDate: toStorageFormat(getCurrentDate()), // Convert display format to storage format
     returnTime: getCurrentTime(),
     note: ''
   })
@@ -56,6 +78,27 @@ const AddCustomer = () => {
     setSuggestions(getContainerSuggestions(''))
   }, [userType])
 
+  // Normalize date to ISO format regardless of input format
+  const normalizeDateAndTime = (date, time) => {
+    if (!date || !time) return { normalizedDate: null, normalizedTime: null };
+    
+    try {
+      // Create a date object from the input
+      const dateObj = new Date(date + 'T' + time);
+      
+      // Format date as YYYY-MM-DD
+      const normalizedDate = dateObj.toISOString().split('T')[0];
+      
+      // Format time as HH:mm
+      const normalizedTime = dateObj.toTimeString().slice(0, 5);
+      
+      return { normalizedDate, normalizedTime };
+    } catch (error) {
+      console.error('Date normalization failed:', error);
+      return { normalizedDate: null, normalizedTime: null };
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     
@@ -64,14 +107,20 @@ const AddCustomer = () => {
       return
     }
 
+    // Normalize the date and time
+    const { normalizedDate, normalizedTime } = normalizeDateAndTime(
+      formData.returnDate,
+      formData.returnTime
+    );
+
     const data = {
       name: formData.name,
       mobile: formData.mobile,
       type: userType,
       image: formData.image,
-      borrowedAmount: formData.borrowedAmount || 0,
-      returnDate: formData.returnDate || null,
-      returnTime: formData.returnTime || null,
+      borrowedAmount: parseFloat(formData.borrowedAmount) || 0,
+      returnDate: normalizedDate,
+      returnTime: normalizedTime,
       note: formData.note || ''
     }
     
@@ -103,10 +152,20 @@ const AddCustomer = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // Special handling for date inputs to ensure consistent format
+    if (name === 'returnDate') {
+      const formattedDate = formatInputDate(value)
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedDate || value // fallback to original value if formatting fails
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
 
     // Handle suggestions for containerName
     if (name === 'containerName') {
@@ -305,10 +364,48 @@ const AddCustomer = () => {
             <label className="block mb-1">Promise Return Date & Time</label>
             <div className="flex gap-2">
               <input
-                type="date"
+                type="text" // Changed to text input for custom format
                 name="returnDate"
-                value={formData.returnDate}
-                onChange={handleChange}
+                placeholder="DD-MM-YYYY"
+                value={displayDate}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  console.log('Input date:', inputValue);
+                  
+                  // Allow typing of numbers and hyphens only
+                  if (!/^[\d-]*$/.test(inputValue)) return;
+                  
+                  setDisplayDate(inputValue);
+                  
+                  // If we have a complete date
+                  if (inputValue.split('-').length === 3) {
+                    const storageFormat = toStorageFormat(inputValue);
+                    console.log('Storage format:', storageFormat);
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      returnDate: storageFormat
+                    }));
+                  }
+                }}
+                onBlur={(e) => {
+                  // Format on blur for consistency
+                  const parts = e.target.value.split(/[-/.]/).filter(p => p);
+                  if (parts.length === 3) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+                    const formattedDisplay = `${day}-${month}-${year}`;
+                    setDisplayDate(formattedDisplay);
+                    
+                    // Update storage format
+                    const storageFormat = `${year}-${month}-${day}`;
+                    setFormData(prev => ({
+                      ...prev,
+                      returnDate: storageFormat
+                    }));
+                  }
+                }}
                 className="flex-1 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <input

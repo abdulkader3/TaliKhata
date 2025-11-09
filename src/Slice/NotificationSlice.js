@@ -36,7 +36,15 @@ const notificationSlice = createSlice({
       Object.values(customers).forEach(container => {
         container.items.forEach(customer => {
           if (customer.returnDate && customer.returnTime) {
+            // The date and time are already normalized in ISO format from AddCustomer
             const dueDate = new Date(customer.returnDate + 'T' + customer.returnTime);
+            
+            // Ensure valid date before comparison
+            if (isNaN(dueDate.getTime())) {
+              console.error('Invalid date for customer:', customer.name);
+              return;
+            }
+            
             const timeDiff = dueDate - now;
             const hoursDiff = timeDiff / (1000 * 60 * 60);
             

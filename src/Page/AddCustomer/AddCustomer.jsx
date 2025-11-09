@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { addCustomer, addSupplier } from '../../Slice/ClintData'
 
+import imageStorageService from '../../services/ImageStorageService';
+
 const AddCustomer = () => {
   const dispatch = useDispatch()
   
@@ -150,8 +152,36 @@ const AddCustomer = () => {
     })
   }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
+  const handleChange = async (e) => {
+    const { name, value, files } = e.target
+    
+    // Handle file input separately
+    if (name === 'image' && files?.[0]) {
+      try {
+        // Generate a temporary unique ID for the image
+        const tempImageId = `temp_${Date.now()}`;
+        
+        // Store the image in IndexedDB
+        await imageStorageService.storeImage(tempImageId, files[0]);
+        
+        // Store the ID reference in form data
+        setFormData(prev => ({
+          ...prev,
+          [name]: tempImageId
+        }));
+        
+        // Create a preview URL for display
+        const previewUrl = URL.createObjectURL(files[0]);
+        setFormData(prev => ({
+          ...prev,
+          imagePreviewUrl: previewUrl
+        }));
+      } catch (error) {
+        console.error('Error storing image:', error);
+        // Handle error appropriately
+      }
+      return;
+    }
     
     // Special handling for date inputs to ensure consistent format
     if (name === 'returnDate') {
